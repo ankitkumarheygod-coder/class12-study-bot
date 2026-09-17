@@ -139,4 +139,17 @@ async def generate_text_with_fallback(system_prompt: str, user_prompt: str, requ
                 def call_gemini():
                     return gemini_client.models.generate_content(
                         model=config.GEMINI_MODEL,
-                        co
+                        contents=[f"System: {system_prompt}\n\nUser: {user_prompt}"],
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json" if require_json else "text/plain",
+                            temperature=0.3
+                        )
+                    )
+                response = await loop.run_in_executor(None, call_gemini)
+                return response.text
+                
+        except Exception as e:
+            logger.warning(f"Provider {provider} failed: {e}")
+            continue # Try next provider
+            
+    raise Exception("माफ़ करना, अभी सारे AI servers व्यस्त हैं। कृपया कुछ देर बाद प्रयास करें।")
