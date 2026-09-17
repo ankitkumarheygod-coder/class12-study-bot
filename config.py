@@ -19,7 +19,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 
 # AI Provider Models
 # Updated to gemini-3.8-flash as 2.5 is deprecating on Oct 16, 2026
-GEMINI_MODEL = "gemini-2.5-flash"
+GEMINI_MODEL = "gemini-3.6-flash"
 GROQ_MODEL = "llama-3.3-70b-versatile"
 CEREBRAS_MODEL = "llama3.1-70b"
 OPENROUTER_MODEL = "google/gemini-2.5-flash:free" # Or any free model you prefer on OpenRouter
