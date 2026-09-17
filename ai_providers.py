@@ -33,19 +33,23 @@ except:
 async def extract_text_from_pdf(file_path: str, mime_type: str = "application/pdf") -> str:
     """सिर्फ Gemini का इस्तेमाल करके PDF से text निकालना (One-time process)"""
     if not gemini_client:
-        raise Exception("Gemini client is not configured.")
+        raise Exception("Gemini API Key configure नहीं की गई है। कृपया अपनी Keys चेक करें।")
     
     try:
-        # Upload file to Gemini
-        uploaded_file = gemini_client.files.upload(file=file_path, config={'mime_type': mime_type})
+        # Upload file to Gemini (SDK will auto-detect PDF format)
+        uploaded_file = gemini_client.files.upload(file=file_path)
         
+        # Helper function to handle both Enum and String states across different SDK versions
+        def get_state(f):
+            return f.state.name if hasattr(f.state, 'name') else f.state
+
         # Wait for processing
-        while uploaded_file.state.name == "PROCESSING":
+        while get_state(uploaded_file) == "PROCESSING":
             await asyncio.sleep(2)
             uploaded_file = gemini_client.files.get(name=uploaded_file.name)
             
-        if uploaded_file.state.name == "FAILED":
-            raise Exception("Gemini failed to process the document.")
+        if get_state(uploaded_file) == "FAILED":
+            raise Exception("Gemini AI PDF को प्रोसेस नहीं कर पाया। फाइल करप्ट हो सकती है।")
             
         # Generate content (Extract text)
         prompt = "Extract all the text from this document. Organize it chapter-wise or topic-wise if possible. Do not summarize, give the full text."
@@ -60,7 +64,8 @@ async def extract_text_from_pdf(file_path: str, mime_type: str = "application/pd
         return response.text
     except Exception as e:
         logger.error(f"PDF Extraction Error: {e}")
-        raise Exception("PDF पढ़ने में कोई तकनीकी समस्या आ गई। कृपया दोबारा कोशिश करें।")
+        # अब यह असली Error Message Telegram पर भेजेगा ताकि आपको पता चले दिक्कत कहाँ है
+        raise Exception(f"{str(e)}")
 
 async def generate_text_with_fallback(system_prompt: str, user_prompt: str, require_json: bool = False) -> str:
     """Multi-provider fallback logic for text generation"""
@@ -104,7 +109,7 @@ async def generate_text_with_fallback(system_prompt: str, user_prompt: str, requ
                 return response.choices[0].message.content
                 
             elif provider == "gemini" and gemini_client:
-                # Gemini SDK async wrapper (running sync in executor to avoid blocking)
+                # Gemini SDK async wrapper
                 loop = asyncio.get_event_loop()
                 def call_gemini():
                     return gemini_client.models.generate_content(
