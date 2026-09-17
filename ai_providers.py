@@ -14,12 +14,6 @@ except Exception as e:
     logger.error(f"Gemini init failed: {e}")
     gemini_client = None
 
-# APMix Client (OpenAI फॉर्मेट पर काम करता है)
-try:
-    apmix_client = AsyncOpenAI(api_key=config.APMIX_API_KEY, base_url="https://api.apmix.ai/v1")
-except:
-    apmix_client = None
-
 try:
     groq_client = AsyncGroq(api_key=config.GROQ_API_KEY)
 except:
@@ -100,12 +94,16 @@ async def generate_text_with_fallback(system_prompt: str, user_prompt: str, requ
         try:
             logger.info(f"Trying provider: {provider}")
             
-            # --- नया APMIX सपोर्ट ---
             if provider == "apmix":
-                if not apmix_client or config.APMIX_API_KEY == "apx_live_p0zl5zA2PqjOSKZTBZrOEwKnxwDkpCk6g6CvYV8R":
-                    error_logs.append("APMix: API Key missing or default")
+                # Check if API Key exists
+                if not getattr(config, "APMIX_API_KEY", None) or config.APMIX_API_KEY == "यहाँ_अपनी_APMIX_की_API_KEY_पेस्ट_करें":
+                    error_logs.append("APMix: API Key config.py में नहीं मिली।")
                     continue
-                response = await apmix_client.chat.completions.create(
+                
+                # Create client directly here to catch exact errors
+                temp_apmix_client = AsyncOpenAI(api_key=config.APMIX_API_KEY, base_url="https://api.apmix.ai/v1")
+                
+                response = await temp_apmix_client.chat.completions.create(
                     model=config.APMIX_MODEL,
                     messages=[
                         {"role": "system", "content": system_prompt},
