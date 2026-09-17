@@ -102,7 +102,7 @@ async def generate_text_with_fallback(system_prompt: str, user_prompt: str, requ
             
             # --- नया APMIX सपोर्ट ---
             if provider == "apmix":
-                if not apmix_client or config.APMIX_API_KEY == "apx_live_qFdzTbts8ES3WEv6LvNxakdB7qwV7wrvvz6Ajkdo":
+                if not apmix_client or config.APMIX_API_KEY == "apx_live_p0zl5zA2PqjOSKZTBZrOEwKnxwDkpCk6g6CvYV8R":
                     error_logs.append("APMix: API Key missing or default")
                     continue
                 response = await apmix_client.chat.completions.create(
